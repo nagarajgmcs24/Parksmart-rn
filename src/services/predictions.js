@@ -1,28 +1,40 @@
-// AI prediction API client for parking availability
-import axios from 'axios';
+export function getTrafficPrediction(slots = []) {
+  const totalSlots = slots.length;
+  const availableSlots = slots.filter((slot) => slot.status === 'available').length;
+  const availability = totalSlots ? availableSlots / totalSlots : 0;
+  const hour = new Date().getHours();
 
-const API_BASE_URL = 'https://api.example.com'; // TODO: Replace with your API endpoint
+  let label = 'Parking availability';
+  let level = 'Normal traffic';
+  let recommendation = 'Review availability and choose a slot soon.';
+  let accent = '#3A82F7';
 
-export async function predictParkingAvailability(location, timeOfDay) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/predict`, {
-      params: { location, timeOfDay },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Prediction API error:', error.message);
-    return null;
+  if (hour >= 6 && hour < 12) {
+    label = 'Morning rush';
+  } else if (hour >= 12 && hour < 18) {
+    label = 'Afternoon demand';
+  } else {
+    label = 'Evening window';
   }
-}
 
-export async function getParkingHeatmap(latitude, longitude, radius = 1) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/heatmap`, {
-      params: { latitude, longitude, radius },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Heatmap API error:', error.message);
-    return [];
+  if (availability <= 0.2) {
+    level = 'Very low availability';
+    recommendation = 'Reserve a parking slot now to avoid full lots.';
+    accent = '#C0392B';
+  } else if (availability <= 0.5) {
+    level = 'Limited availability';
+    recommendation = 'Slots are filling fast — book soon.';
+    accent = '#D68910';
+  } else {
+    level = 'Good availability';
+    recommendation = 'Parking is still available across nearby lots.';
+    accent = '#27AE60';
   }
+
+  return {
+    label,
+    level,
+    recommendation,
+    accent,
+  };
 }

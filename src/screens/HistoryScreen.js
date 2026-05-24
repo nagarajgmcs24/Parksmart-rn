@@ -2,32 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { colors } from '../constants/theme';
 import { getCurrentUser } from '../services/auth';
-import { getUserBookings } from '../services/firestore';
+import { subscribeToUserBookingsRealtime } from '../services/firestore';
 
 export default function HistoryScreen() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadBookings = async () => {
-      const currentUser = getCurrentUser();
-      if (!currentUser) {
-        setBookings([]);
-        setLoading(false);
-        return;
-      }
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const data = await getUserBookings(currentUser.uid);
-        setBookings(data);
-      } catch (error) {
-        Alert.alert('Error', error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const unsubscribe = subscribeToUserBookingsRealtime(currentUser.uid, (data) => {
+      setBookings(data);
+      setLoading(false);
+    });
 
-    loadBookings();
+    return () => unsubscribe();
   }, []);
 
   const formatBookingDate = (booking) => {

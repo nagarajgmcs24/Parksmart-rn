@@ -6,32 +6,7 @@ import ActionCard from '../components/ActionCard';
 import PredictionCard from '../components/PredictionCard';
 import { getCurrentUser } from '../services/auth';
 import { getUserById, subscribeToSlotsRealtime, checkAdminAccess } from '../services/firestore';
-
-const getTrafficPrediction = () => {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 12) {
-    return {
-      label: 'Morning rush',
-      level: 'High traffic',
-      recommendation: 'Book early for best availability',
-      accent: colors.danger,
-    };
-  }
-  if (hour >= 12 && hour < 18) {
-    return {
-      label: 'Afternoon peak',
-      level: 'Medium traffic',
-      recommendation: 'Choose a nearby lot for faster entry',
-      accent: colors.warning,
-    };
-  }
-  return {
-    label: 'Evening calm',
-    level: 'Low traffic',
-    recommendation: 'Great time to park and relax',
-    accent: colors.success,
-  };
-};
+import { getTrafficPrediction } from '../services/predictions';
 
 export default function HomeScreen({ navigation }) {
   const [userName, setUserName] = useState('Driver');
@@ -41,7 +16,7 @@ export default function HomeScreen({ navigation }) {
   const [bookedCount, setBookedCount] = useState(0);
   const [nearbyAreas, setNearbyAreas] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [prediction, setPrediction] = useState(getTrafficPrediction());
+  const [prediction, setPrediction] = useState(getTrafficPrediction([]));
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -63,6 +38,7 @@ export default function HomeScreen({ navigation }) {
       const occupied = slotData.filter((item) => item.status !== 'available').length;
       setAvailableCount(available);
       setBookedCount(occupied);
+      setPrediction(getTrafficPrediction(slotData));
 
       const areaMap = slotData.reduce((acc, slot) => {
         const area = slot.parkingArea || 'City Center';

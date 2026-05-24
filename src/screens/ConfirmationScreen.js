@@ -5,7 +5,7 @@ import { getCurrentUser } from '../services/auth';
 import { createBooking, updateSlotStatus } from '../services/firestore';
 
 export default function ConfirmationScreen({ navigation, route }) {
-  const { selectedSlot } = route.params || {};
+  const { selectedSlot, durationOption, totalPrice } = route.params || {};
   const [loading, setLoading] = useState(false);
 
   if (!selectedSlot) {
@@ -22,23 +22,25 @@ export default function ConfirmationScreen({ navigation, route }) {
   const handleConfirm = async () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      Alert.alert('Authentication required', 'Please login to confirm booking.');
+      Alert.alert('Authentication required', 'Please login to complete booking.');
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      return;
+    }
+
+    if (!durationOption || !totalPrice) {
+      Alert.alert('Invalid selection', 'Please choose a parking duration.');
       return;
     }
 
     setLoading(true);
     try {
-      const booking = await createBooking({
-        userId: currentUser.uid,
-        slotId: selectedSlot.id,
-        status: 'active',
-        durationHours: 1,
+      navigation.navigate('Payment', {
+        selectedSlot,
+        durationOption,
+        totalPrice,
       });
-      await updateSlotStatus(selectedSlot.id, 'occupied');
-      navigation.replace('Ticket', { booking, slot: selectedSlot });
     } catch (error) {
-      Alert.alert('Booking failed', error.message);
+      Alert.alert('Unable to continue', error.message);
     } finally {
       setLoading(false);
     }
@@ -52,6 +54,10 @@ export default function ConfirmationScreen({ navigation, route }) {
         <Text style={styles.value}>{selectedSlot.slotId || selectedSlot.id}</Text>
         <Text style={styles.label}>Area</Text>
         <Text style={styles.value}>{selectedSlot.parkingArea || 'Campus Lot'}</Text>
+        <Text style={styles.label}>Duration</Text>
+        <Text style={styles.value}>{durationOption?.label || '1 hour'}</Text>
+        <Text style={styles.label}>Price</Text>
+        <Text style={styles.value}>₹{totalPrice || 0}</Text>
         <Text style={styles.label}>Status</Text>
         <Text style={styles.value}>{selectedSlot.status || 'available'}</Text>
       </View>

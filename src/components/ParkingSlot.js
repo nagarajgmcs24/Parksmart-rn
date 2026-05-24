@@ -5,7 +5,16 @@ import { colors } from '../constants/theme';
 const slotStyles = {
   available: { backgroundColor: '#D9F5DA', borderColor: colors.success },
   occupied: { backgroundColor: '#FDE1E0', borderColor: colors.danger },
+  reserved: { backgroundColor: '#FFF0D5', borderColor: colors.warning },
+  entered: { backgroundColor: '#E8E0FF', borderColor: '#8A67FF' },
   selected: { backgroundColor: '#FCECC4', borderColor: colors.warning },
+};
+
+const statusLabels = {
+  available: 'Available',
+  occupied: 'Occupied',
+  reserved: 'Reserved',
+  entered: 'Entered',
 };
 
 export default function ParkingSlot({ label, status, selected, onPress }) {
@@ -13,7 +22,7 @@ export default function ParkingSlot({ label, status, selected, onPress }) {
   return (
     <TouchableOpacity style={[styles.container, slotStyles[state]]} onPress={onPress} disabled={status !== 'available'} activeOpacity={0.8}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.status}>{status === 'occupied' ? 'Occupied' : status === 'available' ? 'Available' : 'Selected'}</Text>
+      <Text style={styles.status}>{statusLabels[status] || 'Reserved'}</Text>
     </TouchableOpacity>
   );
 }
